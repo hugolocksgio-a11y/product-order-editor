@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCD Database</title>
+    <style>
+        /* General Styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #2c3e50;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+
+        /* Laptop Login Screen Styling */
+        #laptop-container {
+            width: 800px;
+            height: 500px;
+            background-color: #000;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #screen {
+            background: url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80') center/cover;
+            flex-grow: 1;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            width: 300px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .login-box h2 { margin-top: 0; }
+        .login-box input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+        }
+        .btn:hover { background-color: #2980b9; }
+        #error-msg { color: red; font-size: 14px; margin-top: 10px; }
+
+        /* Dashboard Styling */
+        #dashboard {
+            display: none;
+            width: 900px;
+            height: 600px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content {
+            padding: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .admin-panel {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 5px solid #e74c3c;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #bdc3c7;
+            padding: 10px;
+            text-align: left;
+        }
+        th { background-color: #ecf0f1; }
+
+        .danger-btn { background-color: #e74c3c; }
+        .danger-btn:hover { background-color: #c0392b; }
+        .success-btn { background-color: #2ecc71; }
+        
+        #lockdown-banner {
+            background-color: #e74c3c;
+            color: white;
+            text-align: center;
+            padding: 5px;
+            font-weight: bold;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="laptop-container">
+        <div id="screen">
+            <div class="login-box">
+                <h2>SCD Database</h2>
+                <input type="text" id="username" placeholder="Username">
+                <input type="password" id="password" placeholder="Password">
+                <button class="btn" onclick="attemptLogin()">Log In</button>
+                <div id="error-msg"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard" style="display: none;">
+        <div id="lockdown-banner">SYSTEM IS IN LOCKDOWN MODE</div>
+        <header>
+            <h2>SCD Database</h2>
+            <div>
+                <span id="welcome-msg" style="margin-right: 20px;"></span>
+                <button class="btn danger-btn" style="width: auto;" onclick="logout()">Logout</button>
+            </div>
+        </header>
+
+        <div class="content">
+            <h3>Database Information</h3>
+            <textarea id="db-content" style="width: 100%; height: 100px; padding: 10px;" readonly>No information currently in database.</textarea>
+            <br><br>
+            <button id="save-db-btn" class="btn success-btn" style="display:none; width: 150px;" onclick="saveDatabase()">Save Changes</button>
+            <span id="save-msg" style="color: green; margin-left: 10px;"></span>
+
+            <div id="admin-panel" class="admin-panel" style="display: none;">
+                <h3>👑 Admin Control Center</h3>
+                
+                <div style="margin-bottom: 20px;">
+                    <strong>Lockdown Mode:</strong> 
+                    <button id="lockdown-btn" class="btn" style="width: auto; margin-left: 10px;" onclick="toggleLockdown()">Enable Lockdown</button>
+                    <p style="font-size: 12px; color: #7f8c8d;">When enabled, only users specifically granted lockdown access can log in.</p>
+                </div>
+
+                <hr>
+
+                <h4>Manage Users</h4>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <input type="text" id="new-user" placeholder="New Username" style="padding: 5px;">
+                    <input type="text" id="new-pass" placeholder="Password" style="padding: 5px;">
+                    <label><input type="checkbox" id="can-edit"> Can Edit DB</label>
+                    <label><input type="checkbox" id="can-lockdown"> Lockdown Access</label>
+                    <button class="btn" style="width: auto;" onclick="addUser()">Add User</button>
+                </div>
+
+                <table id="users-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Can Edit DB</th>
+                            <th>Lockdown Access</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-list">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. SYSTEM STATE ---
+        let systemData = {
+            lockdownMode: false,
+            databaseText: "No information currently in database."
+        };
+
+        // Master User List (Hugo is hardcoded as the ultimate admin)
+        let users = [
+            { 
+                username: "hugo.giovannangelo", 
+                password: "091116", 
+                role: "admin", 
+                canEdit: true, 
+                allowedInLockdown: true 
+            }
+        ];
+
+        let currentUser = null;
+
+        // --- 2. LOGIN LOGIC ---
+        function attemptLogin() {
+            const userIn = document.getElementById("username").value;
+            const passIn = document.getElementById("password").value;
+            const errorMsg = document.getElementById("error-msg");
+
+            // Find user
+            const user = users.find(u => u.username === userIn && u.password === passIn);
+
+            if (!user) {
+                errorMsg.innerText = "Incorrect username or password.";
+                return;
+            }
+
+            // Check Lockdown status
+            if (systemData.lockdownMode && !user.allowedInLockdown) {
+                errorMsg.innerText = "ACCESS DENIED: System is in Lockdown.";
+                return;
+            }
+
+            // Success
+            currentUser = user;
+            document.getElementById("username").value = "";
+            document.getElementById("password").value = "";
+            errorMsg.innerText = "";
+            
+            showDashboard();
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById("laptop-container").style.display = "flex";
+            document.getElementById("dashboard").style.display = "none";
+        }
+
+        // --- 3. DASHBOARD & UI LOGIC ---
+        function showDashboard() {
+            document.getElementById("laptop-container").style.display = "none";
+            document.getElementById("dashboard").style.display = "flex";
+            
+            document.getElementById("welcome-msg").innerText = "Logged in as: " + currentUser.username;
+            
+            // Database text setup
+            const dbContent = document.getElementById("db-content");
+            dbContent.value = systemData.databaseText;
+            
+            if (currentUser.canEdit) {
+                dbContent.removeAttribute("readonly");
+                document.getElementById("save-db-btn").style.display = "inline-block";
+            } else {
+                dbContent.setAttribute("readonly", true);
+                document.getElementById("save-db-btn").style.display = "none";
+            }
+
+            // Lockdown Banner
+            document.getElementById("lockdown-banner").style.display = systemData.lockdownMode ? "block" : "none";
+
+            // Admin Panel setup
+            if (currentUser.username === "hugo.giovannangelo") {
+                document.getElementById("admin-panel").style.display = "block";
+                updateAdminPanel();
+            } else {
+                document.getElementById("admin-panel").style.display = "none";
+            }
+        }
+
+        function saveDatabase() {
+            systemData.databaseText = document.getElementById("db-content").value;
+            const msg = document.getElementById("save-msg");
+            msg.innerText = "Saved!";
+            setTimeout(() => { msg.innerText = ""; }, 2000);
+        }
+
+        // --- 4. ADMIN CONTROLS (Hugo Only) ---
+        function toggleLockdown() {
+            systemData.lockdownMode = !systemData.lockdownMode;
+            updateAdminPanel();
+            document.getElementById("lockdown-banner").style.display = systemData.lockdownMode ? "block" : "none";
+        }
+
+        function addUser() {
+            const newU = document.getElementById("new-user").value;
+            const newP = document.getElementById("new-pass").value;
+            const canEdit = document.getElementById("can-edit").checked;
+            const canLock = document.getElementById("can-lockdown").checked;
+
+            if(newU === "" || newP === "") {
+                alert("Username and password cannot be empty!");
+                return;
+            }
+
+            // Check if exists
+            if(users.some(u => u.username === newU)) {
+                alert("User already exists!");
+                return;
+            }
+
+            users.push({
+                username: newU,
+                password: newP,
+                role: "user",
+                canEdit: canEdit,
+                allowedInLockdown: canLock
+            });
+
+            // Clear inputs
+            document.getElementById("new-user").value = "";
+            document.getElementById("new-pass").value = "";
+            document.getElementById("can-edit").checked = false;
+            document.getElementById("can-lockdown").checked = false;
+
+            updateAdminPanel();
+        }
+
+        function removeUser(username) {
+            if (username === "hugo.giovannangelo") {
+                alert("You cannot remove the master admin!");
+                return;
+            }
+            users = users.filter(u => u.username !== username);
+            updateAdminPanel();
+        }
+
+        function updateAdminPanel() {
+            // Update lockdown button text
+            const lockBtn = document.getElementById("lockdown-btn");
+            if (systemData.lockdownMode) {
+                lockBtn.innerText = "Disable Lockdown";
+                lockBtn.classList.add("danger-btn");
+            } else {
+                lockBtn.innerText = "Enable Lockdown";
+                lockBtn.classList.remove("danger-btn");
+            }
+
+            // Render users table
+            const tbody = document.getElementById("users-list");
+            tbody.innerHTML = "";
+
+            users.forEach(u => {
+                let removeBtnHtml = u.username === "hugo.giovannangelo" 
+                    ? `<span style="color:#7f8c8d;">Master Admin</span>` 
+                    : `<button class="btn danger-btn" style="padding: 5px 10px;" onclick="removeUser('${u.username}')">Remove</button>`;
+
+                let row = `<tr>
+                    <td>${u.username}</td>
+                    <td>${u.role}</td>
+                    <td>${u.canEdit ? "✅ Yes" : "❌ No"}</td>
+                    <td>${u.allowedInLockdown ? "✅ Yes" : "❌ No"}</td>
+                    <td>${removeBtnHtml}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+    </script>
+</body>
+</html>
